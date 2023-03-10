@@ -1,3 +1,4 @@
+//TODO: edit this file to read the new config in info.json
 // @ts-check
 const sqldb = require('@prairielearn/postgres');
 
