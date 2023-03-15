@@ -100,7 +100,7 @@
             "description": "Options that define how the question will work, specific to the individual question type.",
             "type": "object"
         },
-        "uniquevariants":{
+        "uniqueVariantsOptions":{
             "description": "Options for using the uniquevariants extension.",
             "type": "object",
             "additionalProperties": false, 

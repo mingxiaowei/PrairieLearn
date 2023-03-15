@@ -11,6 +11,8 @@ columns
     external_grading_files: text[] default ARRAY[]::text[]
     external_grading_image: text
     external_grading_timeout: integer
+    unique_variants_enabled: boolean default false
+    unique_variants_max: integer default 1
     grading_method: enum_grading_method not null default 'Internal'::enum_grading_method
     id: bigint not null default nextval('questions_id_seq'::regclass)
     number: integer

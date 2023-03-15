@@ -372,6 +372,13 @@ const FILE_UUID_REGEX =
  */
 
 /**
+ * 
+ * @typedef {Object} UniqueVariantsOptions 
+ * @property {boolean} enabled
+ * @property {number} max
+ */
+
+/**
  * @typedef {Object} QuestionWorkspaceOptions
  * @property {string} image
  * @property {number} port
@@ -401,6 +408,7 @@ const FILE_UUID_REGEX =
  * @property {boolean} partialCredit
  * @property {Object} options
  * @property {QuestionExternalGradingOptions} externalGradingOptions
+ * @property {UniqueVariantsOptions} uniqueVariantsOptions
  * @property {QuestionWorkspaceOptions} [workspaceOptions]
  * @property {Object} dependencies
  */
