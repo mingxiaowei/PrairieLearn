@@ -1,0 +1,14 @@
+{
+    "uuid": "0fc84798-98f7-4e4d-b57d-6e13c122457f",
+    "title": "Unique Add Numbers",
+    "topic": "Template",
+    "tags": [
+        "mwest",
+        "fa17"
+    ],
+    "type": "v3",
+    "uniqueVariantsOptions": {
+        "enabled": true,
+        "max": 36
+    }
+}

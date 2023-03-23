@@ -304,7 +304,7 @@ module.exports.initExpress = function () {
       logger.error(`Error proxying workspace request: ${err}`, {
         err,
         url: req.url,
-        originalUrl: req.url,
+        originalUrl: req.originalUrl,
       });
       // Check to make sure we weren't already in the middle of sending a
       // response before replying with an error 500
@@ -338,7 +338,7 @@ module.exports.initExpress = function () {
   app.use('/pl/workspace/:workspace_id/container', [
     cookieParser(),
     (req, res, next) => {
-      // Needed for workspaceAuthRouter and `selectAndValidateWorkspace` middleware.
+      // Needed for workspaceAuthRouter.
       res.locals.workspace_id = req.params.workspace_id;
       next();
     },
@@ -1772,21 +1772,21 @@ module.exports.startServer = async () => {
   const meter = opentelemetry.metrics.getMeter('prairielearn');
 
   const connectionCounter = opentelemetry.getCounter(meter, 'http.connections', {
-    unit: opentelemetry.ValueType.INT,
+    valueType: opentelemetry.ValueType.INT,
   });
   server.on('connection', () => connectionCounter.add(1));
 
-  const activeConnectionsGauge = opentelemetry.getObservableGauge(
+  opentelemetry.createObservableValueGauges(
     meter,
     'http.connections.active',
     {
-      unit: opentelemetry.ValueType.INT,
+      valueType: opentelemetry.ValueType.INT,
+      interval: 1000,
+    },
+    () => {
+      return util.promisify(server.getConnections.bind(server))();
     }
   );
-  activeConnectionsGauge.addCallback(async (observableResult) => {
-    const count = await util.promisify(server.getConnections.bind(server))();
-    observableResult.observe(count);
-  });
 
   server.timeout = config.serverTimeout;
   server.keepAliveTimeout = config.serverKeepAliveTimeout;
@@ -2003,6 +2003,64 @@ if (config.startServer) {
             process.exit(0);
           }
         }
+      },
+      async () => {
+        // Collect metrics on our Postgres connection pools.
+        const meter = opentelemetry.metrics.getMeter('prairielearn');
+
+        const pools = [
+          {
+            name: 'default',
+            pool: sqldb.defaultPool,
+          },
+          {
+            name: 'named-locks',
+            pool: namedLocks.pool,
+          },
+        ];
+
+        pools.forEach(({ name, pool }) => {
+          opentelemetry.createObservableValueGauges(
+            meter,
+            `postgres.pool.${name}.total`,
+            {
+              valueType: opentelemetry.ValueType.INT,
+              interval: 1000,
+            },
+            () => pool.totalCount
+          );
+
+          opentelemetry.createObservableValueGauges(
+            meter,
+            `postgres.pool.${name}.idle`,
+            {
+              valueType: opentelemetry.ValueType.INT,
+              interval: 1000,
+            },
+            () => pool.idleCount
+          );
+
+          opentelemetry.createObservableValueGauges(
+            meter,
+            `postgres.pool.${name}.waiting`,
+            {
+              valueType: opentelemetry.ValueType.INT,
+              interval: 1000,
+            },
+            () => pool.waitingCount
+          );
+
+          const queryCounter = opentelemetry.getObservableCounter(
+            meter,
+            `postgres.pool.${name}.query.count`,
+            {
+              valueType: opentelemetry.ValueType.INT,
+            }
+          );
+          queryCounter.addCallback((observableResult) => {
+            observableResult.observe(pool.queryCount);
+          });
+        });
       },
       async () => {
         // We create and activate a random DB schema name

@@ -153,6 +153,8 @@ BEGIN
         external_grading_timeout = (src.data->>'external_grading_timeout')::integer,
         external_grading_enable_networking = (src.data->>'external_grading_enable_networking')::boolean,
         external_grading_environment = (src.data->>'external_grading_environment')::jsonb,
+        unique_variants_enabled = (src.data->>'unique_variants_enabled')::boolean,
+        unique_variants_max = (src.data->>'unique_variants_max')::integer,
         dependencies = (src.data->>'dependencies')::jsonb,
         workspace_image = src.data->>'workspace_image',
         workspace_port = (src.data->>'workspace_port')::integer,

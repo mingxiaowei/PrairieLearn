@@ -100,6 +100,28 @@
             "description": "Options that define how the question will work, specific to the individual question type.",
             "type": "object"
         },
+        "uniqueVariantsOptions":{
+            "description": "Options for using the uniquevariants extension.",
+            "type": "object",
+            "additionalProperties": false, 
+            "required": [
+                "enabled"
+            ],
+            "properties": {
+                "comment": {
+                    "description": "Arbitrary comment for reference purposes.",
+                    "anyOf": [{"type": "string"}, {"type": "array"}, {"type": "object"}]
+                },
+                "enabled": {
+                    "description": "Whether the uniquevariants extension is enabled.",
+                    "type": "boolean"
+                },
+                "max": {
+                    "description": "the maximum number of unique variants that can be generated for this question.",
+                    "type": "integer"
+                }
+            }
+        },
         "externalGradingOptions": {
             "description": "Options for externally graded questions.",
             "type": "object",
