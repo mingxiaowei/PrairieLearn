@@ -1,33 +1,33 @@
-const util = require('util');
-const ERR = require('async-stacktrace');
-const _ = require('lodash');
-const express = require('express');
-const router = express.Router();
+import { callbackify } from 'util';
+import ERR from 'async-stacktrace';
+import { omit } from 'lodash';
+import { Router } from 'express';
+const router = Router();
 
-const error = require('@prairielearn/error');
+import { make } from '@prairielearn/error';
 const logPageView = require('../../middlewares/logPageView')('studentInstanceQuestion');
-const question = require('../../lib/question');
-const studentInstanceQuestion = require('../shared/studentInstanceQuestion');
-const sqldb = require('@prairielearn/postgres');
+import { saveAndGradeSubmission, saveSubmission, renderPanelsForSubmission, getAndRenderVariant } from '../../lib/question';
+import { processFileUpload, processTextUpload, processDeleteFile, processIssue } from '../shared/studentInstanceQuestion';
+import { callOneRow } from '@prairielearn/postgres';
 
 function processSubmission(req, res, callback) {
   if (!res.locals.authz_result.active) {
-    return callback(error.make(400, 'This assessment is not accepting submissions at this time.'));
+    return callback(make(400, 'This assessment is not accepting submissions at this time.'));
   }
   let variant_id, submitted_answer;
   if (res.locals.question.type === 'Freeform') {
     variant_id = req.body.__variant_id;
-    submitted_answer = _.omit(req.body, ['__action', '__csrf_token', '__variant_id']);
+    submitted_answer = omit(req.body, ['__action', '__csrf_token', '__variant_id']);
   } else {
     if (!req.body.postData) {
-      return callback(error.make(400, 'No postData', { locals: res.locals, body: req.body }));
+      return callback(make(400, 'No postData', { locals: res.locals, body: req.body }));
     }
     let postData;
     try {
       postData = JSON.parse(req.body.postData);
     } catch (e) {
       return callback(
-        error.make(400, 'JSON parse failed on body.postData', {
+        make(400, 'JSON parse failed on body.postData', {
           locals: res.locals,
           body: req.body,
         })
@@ -43,7 +43,7 @@ function processSubmission(req, res, callback) {
     credit: res.locals.authz_result.credit,
     mode: res.locals.authz_data.mode,
   };
-  sqldb.callOneRow(
+  callOneRow(
     'variants_ensure_instance_question',
     [submission.variant_id, res.locals.instance_question.id],
     (err, result) => {
@@ -51,7 +51,7 @@ function processSubmission(req, res, callback) {
       const variant = result.rows[0];
       if (req.body.__action === 'grade') {
         const overrideRateLimits = false;
-        question.saveAndGradeSubmission(
+        saveAndGradeSubmission(
           submission,
           variant,
           res.locals.question,
@@ -63,7 +63,7 @@ function processSubmission(req, res, callback) {
           }
         );
       } else if (req.body.__action === 'save') {
-        question.saveSubmission(
+        saveSubmission(
           submission,
           variant,
           res.locals.question,
@@ -75,7 +75,7 @@ function processSubmission(req, res, callback) {
         );
       } else {
         callback(
-          error.make(400, 'unknown __action', {
+          make(400, 'unknown __action', {
             locals: res.locals,
             body: req.body,
           })
@@ -89,7 +89,7 @@ router.post('/', function (req, res, next) {
   if (res.locals.assessment.type !== 'Homework') return next();
 
   if (!res.locals.authz_result.authorized_edit) {
-    return next(error.make(403, 'Not authorized', res.locals));
+    return next(make(403, 'Not authorized', res.locals));
   }
 
   if (req.body.__action === 'grade' || req.body.__action === 'save') {
@@ -104,7 +104,7 @@ router.post('/', function (req, res, next) {
       );
     });
   } else if (req.body.__action === 'attach_file') {
-    util.callbackify(studentInstanceQuestion.processFileUpload)(
+    callbackify(processFileUpload)(
       req,
       res,
       function (err, variant_id) {
@@ -119,7 +119,7 @@ router.post('/', function (req, res, next) {
       }
     );
   } else if (req.body.__action === 'attach_text') {
-    util.callbackify(studentInstanceQuestion.processTextUpload)(
+    callbackify(processTextUpload)(
       req,
       res,
       function (err, variant_id) {
@@ -134,7 +134,7 @@ router.post('/', function (req, res, next) {
       }
     );
   } else if (req.body.__action === 'delete_file') {
-    util.callbackify(studentInstanceQuestion.processDeleteFile)(
+    callbackify(processDeleteFile)(
       req,
       res,
       function (err, variant_id) {
@@ -149,7 +149,7 @@ router.post('/', function (req, res, next) {
       }
     );
   } else if (req.body.__action === 'report_issue') {
-    util.callbackify(studentInstanceQuestion.processIssue)(req, res, function (err, variant_id) {
+    callbackify(processIssue)(req, res, function (err, variant_id) {
       if (ERR(err, next)) return;
       res.redirect(
         res.locals.urlPrefix +
@@ -161,7 +161,7 @@ router.post('/', function (req, res, next) {
     });
   } else {
     next(
-      error.make(400, 'unknown __action: ' + req.body.__action, {
+      make(400, 'unknown __action: ' + req.body.__action, {
         locals: res.locals,
         body: req.body,
       })
@@ -170,7 +170,7 @@ router.post('/', function (req, res, next) {
 });
 
 router.get('/variant/:variant_id/submission/:submission_id', function (req, res, next) {
-  question.renderPanelsForSubmission(
+  renderPanelsForSubmission(
     req.params.submission_id,
     res.locals.question.id,
     res.locals.instance_question.id,
@@ -189,7 +189,7 @@ router.get('/variant/:variant_id/submission/:submission_id', function (req, res,
 
 router.get('/', function (req, res, next) {
   if (res.locals.assessment.type !== 'Homework') return next();
-  question.getAndRenderVariant(req.query.variant_id, null, res.locals, function (err) {
+  getAndRenderVariant(req.query.variant_id, null, res.locals, function (err) {
     if (ERR(err, next)) return;
     logPageView(req, res, (err) => {
       if (ERR(err, next)) return;
@@ -198,4 +198,4 @@ router.get('/', function (req, res, next) {
   });
 });
 
-module.exports = router;
+export default router;

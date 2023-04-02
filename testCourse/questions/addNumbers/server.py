@@ -1,10 +1,14 @@
 import random
 
+total_variant = [(a, b) for a in range(5, 11) for b in range(5, 11)]
 
-def generate(data):
+def generate(data, key=None):
     # Sample two random integers between 5 and 10 (inclusive)
-    a = random.randint(5, 10)
-    b = random.randint(5, 10)
+    if key == None:
+        a = random.randint(5, 10)
+        b = random.randint(5, 10)
+    else:
+        a, b = total_variant[key % len(total_variant)]
 
     # Put these two integers into data['params']
     data["params"]["a"] = a
