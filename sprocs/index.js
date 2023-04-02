@@ -123,6 +123,7 @@ module.exports.init = function (callback) {
       'variants_ensure_instance_question.sql',
       'variants_ensure_question.sql',
       'variants_insert.sql',
+      'variants_peek.sql',
       'variants_select_submission_for_grading.sql',
       'variants_select_for_assessment_instance_grading.sql',
       'variants_update_after_grading.sql',
