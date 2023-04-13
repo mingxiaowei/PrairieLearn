@@ -11,10 +11,23 @@ const sql = sqldb.loadSqlEquiv(__filename);
 export async function init(migrationDir: string, project: string) {
   const lockName = 'migrations';
   logger.verbose(`Waiting for lock ${lockName}`);
-  await namedLocks.doWithLock(lockName, {}, async () => {
-    logger.verbose(`Acquired lock ${lockName}`);
-    await initWithLock(migrationDir, project);
-  });
+  await namedLocks.doWithLock(
+    lockName,
+    {
+      // Migrations *might* take a long time to run, so we'll enable automatic
+      // lock renewal so that our lock doesn't get killed by the Postgres
+      // idle session timeout.
+      //
+      // That said, we should generally try to keep migrations executing as
+      // quickly as possible. A long-running migration likely means that
+      // Postgres is locking a whole table, which is unacceptable in production.
+      autoRenew: true,
+    },
+    async () => {
+      logger.verbose(`Acquired lock ${lockName}`);
+      await initWithLock(migrationDir, project);
+    }
+  );
   logger.verbose(`Released lock ${lockName}`);
 }
 
@@ -58,7 +71,7 @@ export async function readAndValidateMigrationsFromDirectory(
 
   // First pass: validate that all migrations have a unique timestamp prefix.
   // This will avoid data loss and conflicts in unexpected scenarios.
-  let seenTimestamps = new Set();
+  const seenTimestamps = new Set();
   for (const migration of migrations) {
     const { filename, timestamp } = migration;
 
