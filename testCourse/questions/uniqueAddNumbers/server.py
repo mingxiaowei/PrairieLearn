@@ -3,8 +3,9 @@ import random
 
 def generate(data):
     # Sample two random integers between 5 and 10 (inclusive)
-    a = random.randint(5, 10)
-    b = random.randint(5, 10)
+    var_key = data['variant_keys'] % 36
+    lst = [(i, j) for i in range(5, 11) for j in range(5, 11)]
+    a, b = lst[var_key]
 
     # Put these two integers into data['params']
     data["params"]["a"] = a
