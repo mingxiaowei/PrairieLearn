@@ -7,7 +7,7 @@
         "node": ">=16.0.0"
     },
     "scripts": {
-        "release": "turbo run build && changeset publish",
+        "release": "turbo run build && node tools/fix-workspace-versions-before-publish.mjs && changeset publish",
         "version": "changeset version && YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn"
     },
     "dependencies": {
@@ -16,6 +16,7 @@
         "@octokit/rest": "^19.0.7",
         "@prairielearn/bind-mount": "workspace:^",
         "@prairielearn/compiled-assets": "workspace:^",
+        "@prairielearn/config": "workspace:^",
         "@prairielearn/csv": "workspace:^",
         "@prairielearn/error": "workspace:^",
         "@prairielearn/html": "workspace:^",
@@ -167,6 +168,7 @@
         "@types/dockerode": "^3.3.16",
         "@types/folder-hash": "^4.0.2",
         "@types/fs-extra": "^11.0.1",
+        "@types/klaw": "^3.0.3",
         "@types/lodash": "^4.14.192",
         "@types/loopbench": "^1.2.1",
         "@types/memorystream": "^0.3.1",
