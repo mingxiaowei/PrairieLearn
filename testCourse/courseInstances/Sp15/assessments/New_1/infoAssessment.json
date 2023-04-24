@@ -4,6 +4,16 @@
     "title": "PL Dev Testing",
     "set": "Homework",
     "number": "0",
-    "allowAccess": [],
-    "zones": []
+    "allowAccess": [
+        {
+            "credit": 100
+        }
+        ],
+    "zones": [
+        {
+            "questions": [
+                {"id": "uniqueAddNumbers", "points": 1}
+            ]
+        }
+        ]
 }

@@ -529,7 +529,11 @@ module.exports = {
     // prettier-ignore
     err = checkProp('test_type',             'string',  ['test'],                             []);
     if (err) return err;
-
+    debug('about to check variant_key')
+    // prettier-ignore, ADDED FOR VARIANT KEY
+    err = checkProp('variant_key',           'integer', ['generate', 'prepare'],              ['generate', 'prepare']);
+    if (err) return err;
+    debug('variant_key checked')
     const extraProps = _.difference(_.keys(data), checked);
     if (extraProps.length > 0) return '"data" has invalid extra keys: ' + extraProps.join(', ');
 
@@ -872,7 +876,7 @@ module.exports = {
   async processQuestionServer(phase, codeCaller, data, html, fileData, context) {
     const courseIssues = [];
     const origData = JSON.parse(JSON.stringify(data));
-
+    debug('processQuestionServer:', 'phase =', phase, 'data =', data);
     const checkErrBefore = module.exports.checkData(data, origData, phase);
     if (checkErrBefore) {
       courseIssues.push(
@@ -956,6 +960,7 @@ module.exports = {
   },
 
   async processQuestion(phase, codeCaller, data, context) {
+    debug('data in processQuestion:', data);
     const meter = metrics.getMeter('prairielearn');
     return instrumentedWithMetrics(meter, `freeform.${phase}`, async () => {
       if (phase === 'generate') {
@@ -1025,7 +1030,8 @@ module.exports = {
     return options;
   },
 
-  async generateAsync(question, course, variant_seed) {
+  async generateAsync(question, course, variant_seed, variant_key=1) {
+    // TODO: call generateAsync from generate with the actual variant_key
     return instrumented('freeform.generate', async () => {
       const context = await module.exports.getContext(question, course);
       const data = {
@@ -1033,8 +1039,11 @@ module.exports = {
         correct_answers: {},
         variant_seed: parseInt(variant_seed, 36),
         options: _.defaults({}, course.options, question.options),
+        variant_key: variant_key
       };
       _.extend(data.options, module.exports.getContextOptions(context));
+
+      debug(`variant_key is ${data.variant_key}`)
 
       return await withCodeCaller(context.course_dir_host, async (codeCaller) => {
         const { courseIssues, data: resultData } = await module.exports.processQuestion(
@@ -1054,8 +1063,9 @@ module.exports = {
     });
   },
 
-  generate(question, course, variant_seed, callback) {
-    module.exports.generateAsync(question, course, variant_seed).then(
+  generate(question, course, variant_seed, callback, variant_key=1) {
+    // TODO: call generate from question.js with the actual variant_key
+    module.exports.generateAsync(question, course, variant_seed, variant_key).then(
       ({ courseIssues, data }) => {
         callback(null, courseIssues, data);
       },
@@ -1065,7 +1075,8 @@ module.exports = {
     );
   },
 
-  async prepareAsync(question, course, variant) {
+  async prepareAsync(question, course, variant, variant_key=1) {
+     // TODO: call prepareAsync with the actual variant_key
     return instrumented('freeform.prepare', async () => {
       if (variant.broken) throw new Error('attemped to prepare broken variant');
 
@@ -1075,6 +1086,7 @@ module.exports = {
         correct_answers: _.get(variant, 'true_answer', {}),
         variant_seed: parseInt(variant.variant_seed, 36),
         options: _.get(variant, 'options', {}),
+        variant_key: variant_key, 
       };
       _.extend(data.options, module.exports.getContextOptions(context));
 
@@ -1165,7 +1177,6 @@ module.exports = {
       panel: panel,
       num_valid_submissions: _.get(variant, 'num_tries', null),
     };
-
     // This URL is submission-specific, so we have to compute it here (that is,
     // it won't be present in `locals`). This URL will only have meaning if
     // there's a submission, so it will be `null` otherwise.

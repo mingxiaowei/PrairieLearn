@@ -6,8 +6,8 @@ def generate(data):
     # data['variant_keys'] = random.randint(0, 35)
     
     # Sample two random integers between 5 and 10 (inclusive)
-    var_key = data['variant_key'] % 36
-    # var_key = random.randint(0, 35)
+    # var_key = data['variant_keys'] % 36
+    var_key = random.randint(0, 35)
     lst = [(i, j) for i in range(5, 11) for j in range(5, 11)]
     a, b = lst[var_key]
 

@@ -95,7 +95,8 @@ module.exports = {
     callback(null, [], htmls);
   },
 
-  generate: function (question, course, variant_seed, callback) {
+  generate: function (question, course, variant_seed, callback, variant_key=1) {
+    // TODO: replace variant_key with the actual variant_key
     const coursePath = chunks.getRuntimeDirectoryForCourse(course);
     var questionDir = path.join(coursePath, 'questions', question.directory);
     module.exports.loadServer(question, course, function (err, server) {
@@ -109,6 +110,7 @@ module.exports = {
           variant_seed: variant_seed,
           question: question,
           course: course,
+          variant_key: variant_key
         };
         err.status = 500;
         return ERR(error.addData(err, data), callback);
@@ -117,16 +119,19 @@ module.exports = {
         params: questionData.params,
         true_answer: questionData.trueAnswer,
         options: questionData.options || question.options || {},
+        variant_key: variant_key
       };
       callback(null, [], data);
     });
   },
 
-  prepare: function (question, course, variant, callback) {
+  prepare: function (question, course, variant, callback, variant_key=1) {
+    // TODO: replace variant_key with the actual variant_key
     const data = {
       params: variant.params,
       true_answer: variant.true_answer,
       options: variant.options,
+      variant_key: variant_key
     };
     callback(null, [], data);
   },
