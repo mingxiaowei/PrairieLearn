@@ -135,6 +135,7 @@
         "requirejs": "^2.3.6",
         "s3-streamlogger": "1.7.0",
         "search-string": "^3.1.0",
+        "seedrandom": "^3.0.5",
         "serve-favicon": "^2.5.0",
         "showdown": "^2.1.0",
         "socket.io": "^4.6.1",
