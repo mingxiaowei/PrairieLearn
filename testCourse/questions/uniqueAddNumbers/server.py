@@ -6,9 +6,9 @@ def generate(data):
     # data['variant_keys'] = random.randint(0, 35)
     
     # Sample two random integers between 5 and 10 (inclusive)
-    var_key = data['variant_key'] % 36
+    var_key = data['variant_key'] % 4
     # var_key = random.randint(0, 35)
-    lst = [(i, j) for i in range(5, 11) for j in range(5, 11)]
+    lst = [(i, j) for i in range(5, 7) for j in range(5, 7)]
     a, b = lst[var_key]
 
     # Put these two integers into data['params']
